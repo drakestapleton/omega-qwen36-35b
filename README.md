@@ -50,7 +50,29 @@ Measured on **NVIDIA DGX Spark (GB10, `sm_121`, driver `580.173.02`, Linux `7.0.
 | **3K Needle-in-a-Haystack (Live HTTP)** | Full-W4 (`q36-serve`) | `2,994` tok / `17` gen | `1,703 ms` | **`1,758.1 tok/s`** | `47.89 tok/s` (`355 ms`) | `32%` (`341,266 / 1,045,072`) | Exact recall: `"Captain Elena Vance authorized deployment code Aurora-742 at station Omega-9."` |
 | **128K Context + Batch-8 Self-Test** | Full-W4 (`q36-serve --self-test --batch`) | `131,072` cap (`128K`) | — | — | `241.34 tok/s` (`N=8`) | `41%` (`6,872 / 16,720`) | `PASS` (Prompts 0 & 1 exact + `N=8` batch) |
 
-### 3. Full-Chip GB10 APU Engine (`apu-fullchip`)
+### 3. Comparison vs. Other Stacks (DGX Spark GB10)
+
+All stacks measured on the **same NVIDIA DGX Spark GB10** (`131,072`-token context, prefix/radix caching disabled, `temperature=0`, `max_tokens=256`):
+- **Side-by-side 5.4K prompt harness (`2026-11-23`, Spark receipts `sbs-35b-omega2`, `sbs-35b-vllm`, `sbs-35b-sglang`):** Identical `5,377–5,379`-token prompt (`prompt1.txt`), fresh engine state, cold (`0%` page cache) and warm (`100%` page cache) startups.
+- **Latest `omega-qwen36-35b` (`2026-11-24`, Windows 1–2 above):** Adds the full APU + fused MoE (`qW4B32GroupedM4` + `GemmM4` + Split-K `S=16` HMMA FA2) + Live Arboris + Native MTP stack.
+- **Legacy C/Rust `aien-serve-http` (`2026-11-21`, Spark receipt `2026-11-21-q36-35b-verified-kit.json`):** Prior C/Rust Omega serving stack before the pure seeded-OM-2 rewrite.
+
+| Stack / Engine | Userspace Runtime | Cold Ready | Warm Ready | 5.4K Cold TTFT | Launch → 1st Tok (Warm) | Decode (`N=1`) | Batched (`N=4` / `N=8`) | Grounding (`5.4K` P1) | NVRM Errors |
+|---|---|---:|---:|---:|---:|---:|---:|---|---:|
+| **Omega `q36-serve` Full-W4 (this repo)** | **Zero-CUDA static ELF (`938 KB`)** | **`57.32 s`** | **`22.04 s`** | **`3.55 s`** | **`25.60 s`** | **`67.47 tok/s`** (`75.99` MTP) | **`147.14` / `241.47 tok/s`** | **`5/5` locs, `7=Y`, `53=Y`** | **`0`** |
+| **Omega `q36-serve` Exact FP8 (this repo)** | **Zero-CUDA static ELF (`938 KB`)** | `60.11 s` | `28.66 s` | `120.36 s` | `149.19 s` | `48.03 tok/s` (`37.63` @ 5.4K) | — | `1/5` locs, `7=Y`, `53=N` | **`0`** |
+| Legacy C/Rust `aien-serve-http` | Zero-CUDA C/Rust (superseded) | — | — | — | — | `50.43 tok/s` | `105.31` / `119.39 tok/s` | — | `0` |
+| **vLLM** (CUDA container, FP8) | Python + PyTorch + CUDA | `368.73 s` | `367.59 s` | `17.98 s` | `387.62 s` | `51.19 tok/s` | — | `0/5` locs, `7=Y`, `53=Y` | `1` |
+| **SGLang** (CUDA container, FP8) | Python + PyTorch + CUDA | `318.31 s` | `306.54 s` | `19.56 s` | `323.75 s` | `50.47 tok/s` (`50.76` warm) | — | `0/5` locs, `7=Y`, `53=Y` | `3` (exit `120`) |
+
+Key measured deltas on GB10:
+- **Cold / Warm Startup:** Omega Full-W4 reaches ready **`6.43×` faster cold** (`57.32 s` vs `368.73 s`) and **`16.68×` faster warm** (`22.04 s` vs `367.59 s`) than vLLM, and **`5.55×` faster cold / `13.91×` faster warm** than SGLang.
+- **Time to First Token (5.4K prompt, no prefix cache):** **`5.06×` faster** than vLLM (`3.55 s` vs `17.98 s`) and **`5.51×` faster** than SGLang (`3.55 s` vs `19.56 s`). Warm Launch → 1st Token is **`15.14×` faster** than vLLM (`25.60 s` vs `387.62 s`) and **`12.65×` faster** than SGLang (`25.60 s` vs `323.75 s`).
+- **Prose Decode Throughput:** Live HTTP Full-W4 (`67.47 tok/s`) is **`1.32×` faster** than vLLM (`51.19 tok/s`) and **`1.34×` faster** than SGLang (`50.47 tok/s`); with Native MTP (`75.99 tok/s`), **`1.48×` faster** than vLLM and **`1.51×` faster** than SGLang.
+- **Batched Decode vs. Legacy C/Rust Omega:** Pure seeded-OM-2 `q36` is **`1.40×` faster at `N=4`** (`147.14` vs `105.31 tok/s`) and **`2.02×` faster at `N=8`** (`241.47` vs `119.39 tok/s`).
+- **Stability:** Zero NVRM kernel errors (`nvrm_errors_delta: 0`) across all Omega runs vs. `1` NVRM error on vLLM and `3` NVRM errors + `[Errno 32] Broken pipe` (`exit 120`) on SGLang warm teardown.
+
+### 4. Full-Chip GB10 APU Engine (`apu-fullchip`)
 
 | Slice | Compute Units Active | Steps (64-bit LCG+XOR) | Wall Time | Throughput | Verification |
 |---|---|---:|---:|---:|---|
@@ -58,7 +80,7 @@ Measured on **NVIDIA DGX Spark (GB10, `sm_121`, driver `580.173.02`, Linux `7.0.
 | `FULLCHIP_APU_20CPU_48SM_2B` | 20 ARM CPU + 48 Blackwell SM121 SMs | `2,000,000,000` | `1,648 µs` | `3.641 T ops/s` | `BIT_EXACT=PASS` |
 | **`FULLCHIP_APU_20CPU_48SM_20B`** | **20 ARM CPU + 48 Blackwell SM121 SMs (6,164 cores)** | **`20,000,000,000`** | **`13,400 µs`** | **`4.478 T ops/s`** | **`BIT_EXACT=PASS`** |
 
-### 4. Zero-CUDA Static Binary Manifest (`omega-mv@c30af19e9856`)
+### 5. Zero-CUDA Static Binary Manifest (`omega-mv@c30af19e9856`)
 
 All binaries are compiled purely by `seed/out/omc` (`not a dynamic executable` under `ldd`):
 
