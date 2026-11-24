@@ -1,0 +1,4 @@
+# Pinned omega-mv source commit for omega-qwen36-35b
+# Canonical forge: https://interplane.io/drakestapleton/omega-mv
+OMEGA_MV_REPO=https://interplane.io/drakestapleton/omega-mv.git
+OMEGA_MV_COMMIT=c30af19e98561037e8cb1445035fef948951699a

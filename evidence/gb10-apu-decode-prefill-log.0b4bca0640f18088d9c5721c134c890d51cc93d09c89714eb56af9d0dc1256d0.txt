@@ -1,0 +1,74 @@
+=== ENVIRONMENT ===
+2026-11-24T18:40:38Z
+Linux spark-b87b 7.0.0-1019-nvidia #19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Sun Sep  6 18:35:11 UTC 2 aarch64 aarch64 aarch64 GNU/Linux
+name, driver_version, clocks.current.sm [MHz], temperature.gpu, power.draw [W]
+NVIDIA GB10, 580.173.02, 208 MHz, 41, 4.86 W
+c30af19e98561037e8cb1445035fef948951699a
+=== 1. FULL-CHIP GB10 APU (20 CPU + 48 SM121 SMs) ===
+=== OMEGA PURE-OM2 FULL-CHIP GB10 APU ENGINE (20 CPU CORES + 48 BLACKWELL SMs = 6,164 CORES SIMULTANEOUSLY) ===
+GPU_48SM_ONLY_2B_SLICE: steps=1989672960 checksum=4391296788641087488 wall_us=1347 gops_x10=44313428
+FULLCHIP_APU_20CPU_48SM_2B: steps=2000000000 checksum=12007830798541130620 wall_us=1648 gops_x10=36407766 BIT_EXACT=PASS
+FULLCHIP_APU_20CPU_48SM_20B: steps=20000000000 checksum=9438687337694520784 wall_us=13400 gops_x10=44776119 BIT_EXACT=PASS
+=== 2. FULL-W4 DECODE + PARITY (24 tok) ===
+=== QWEN 3.6 35B-A3B FP8 100% PURE SEEDED-OMEGA REAL-WEIGHT DECODER (ZERO CUDA) ===
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=46606
+Prefilling prompt tokens (len=17) -> W4 Two-Pass Exact lm_head PARITY=EXACT vs Full BF16 (tok=271)
+Generated token IDs: 271 760 6511 314 9338 369 2972 57590 159034 248046 198 248044 248045 248045 198 248045 198 248045 248046 198 248045 846 198 248046 
+REAL_Q36_35B_ZERO_CUDA_DECODE: gen_tokens=24 avg_us_per_tok=14670 tok_s_x100=6816 arboris_real_hit_pct=37
+=== 3. FULL-W4 + NATIVE MTP M=4 DECODE (64 tok) ===
+=== QWEN 3.6 35B-A3B FP8 100% PURE SEEDED-OMEGA REAL-WEIGHT DECODER (ZERO CUDA) ===
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=20675
+Loaded & quantized native mtp.safetensors (Slot 40 W4 + 16 MB FC) in ms=1061
+
+=== NATIVE QWEN 3.6 MTP SPECULATIVE DECODE BENCH (M=4)
+N=1 BASELINE: gen_tokens=64 avg_us_per_tok=14916 tok_s_x100=6704
+MTP_SPEC (M=4) PARITY=EXACT steps=25 acc_x100=252 avg_us_per_tok=13159 tok_s_x100=7599 speedup_x100=113
+=== 4. FULL-W4 CONTINUOUS BATCH-4 DECODE (64 tok) ===
+=== QWEN 3.6 35B-A3B FP8 100% PURE SEEDED-OMEGA REAL-WEIGHT DECODER (ZERO CUDA) ===
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=15653
+
+=== CONTINUOUS MULTI-USER BATCHED DECODE BENCH (N=4)
+BATCH_DECODE: streams=4 total_toks=256 step_us=27183 agg_tok_s_x100=14714
+=== 5. FULL-W4 CONTINUOUS BATCH-8 DECODE (64 tok) ===
+=== QWEN 3.6 35B-A3B FP8 100% PURE SEEDED-OMEGA REAL-WEIGHT DECODER (ZERO CUDA) ===
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=16030
+
+=== CONTINUOUS MULTI-USER BATCHED DECODE BENCH (N=8)
+BATCH_DECODE: streams=8 total_toks=512 step_us=33129 agg_tok_s_x100=24147
+=== 6. PREFILL 1024 TOKENS (HMMA FA2 + LIVE ARBORIS) ===
+=== QWEN 3.6 35B-A3B FP8 100% PURE SEEDED-OMEGA REAL-WEIGHT DECODER (ZERO CUDA) ===
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=13581
+
+PREFILL_BENCH_W4: tokens=1024 prefill_ms=556 prefill_tok_s=1841 arboris_hit_pct=52 arb_cpu_ms=96
+=== 7. PREFILL 4096 TOKENS (HMMA FA2 + LIVE ARBORIS) ===
+=== QWEN 3.6 35B-A3B FP8 100% PURE SEEDED-OMEGA REAL-WEIGHT DECODER (ZERO CUDA) ===
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=13607
+
+PREFILL_BENCH_W4: tokens=4096 prefill_ms=2343 prefill_tok_s=1748 arboris_hit_pct=52 arb_cpu_ms=519
+=== 8. PREFILL 16384 TOKENS (HMMA FA2 + LIVE ARBORIS) ===
+=== QWEN 3.6 35B-A3B FP8 100% PURE SEEDED-OMEGA REAL-WEIGHT DECODER (ZERO CUDA) ===
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=13449
+
+PREFILL_BENCH_W4: tokens=16384 prefill_ms=14442 prefill_tok_s=1134 arboris_hit_pct=51 arb_cpu_ms=1935
+=== 9. EXACT FP8 DECODE + PARITY (24 tok) ===
+=== QWEN 3.6 35B-A3B FP8 100% PURE SEEDED-OMEGA REAL-WEIGHT DECODER (ZERO CUDA) ===
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=13509
+Prefilling prompt tokens (len=17) -> W4 Two-Pass Exact lm_head PARITY=EXACT vs Full BF16 (tok=271)
+Generated token IDs: 271 760 6511 314 9338 369 2972 57590 159034 248046 198 248044 248045 248045 198 248045 846 198 3710 369 279 6511 314 9338 
+REAL_Q36_35B_ZERO_CUDA_DECODE: gen_tokens=24 avg_us_per_tok=20818 tok_s_x100=4803 arboris_real_hit_pct=45
+=== 10. LIVE HTTP PROSE DECODE & NEEDLE RECALL (q36-serve --w4 --mtp :18191) ===
+ERROR: q36-serve failed to become ready
+=== QWEN 3.6 35B-A3B 100% PURE SEEDED-OMEGA ZERO-CUDA SERVER + LIVE ARBORIS (q36-serve) ===
+Mode: Full-W4 (67.76 tok/s class, ~19.5 GB VRAM) + Live Arboris
+Loaded Qwen 3.6 ByteLevel BPE tokenizer (248,044 vocab)
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=13835
+Loaded & quantized native mtp.safetensors (Slot 40 W4 + 16 MB FC) in ms=1113

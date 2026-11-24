@@ -1,0 +1,39 @@
+=== HTTP SUITE: Full-W4 + Native MTP (port 18191, extra=--mtp) ===
+SERVER EXITED EARLY rc=40
+=== QWEN 3.6 35B-A3B 100% PURE SEEDED-OMEGA ZERO-CUDA SERVER + LIVE ARBORIS (q36-serve) ===
+Mode: Full-W4 (67.76 tok/s class, ~19.5 GB VRAM) + Live Arboris
+Loaded Qwen 3.6 ByteLevel BPE tokenizer (248,044 vocab)
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=13766
+Loaded & quantized native mtp.safetensors (Slot 40 W4 + 16 MB FC) in ms=284
+=== HTTP SUITE: Full-W4 (default) (port 18192, extra=) ===
+--- /health ---
+{"status":"ok","model":"qwen3.6-35b-a3b-fp8","engine":"omega-zero-cuda","context_window":131072,"precision":"w4","arboris_enabled":true,"arboris_hits":0,"arboris_total":0,"arboris_hit_pct":0}
+
+--- Short Factual Prose (max_tokens=32) ---
+{"id":"cmpl-q36","object":"chat.completion","model":"qwen3.6-35b-a3b-fp8","choices":[{"index":0,"message":{"role":"assistant","content":"The capital of France is **Paris**."},"finish_reason":"stop"}],"usage":{"prompt_tokens":19,"completion_tokens":8,"total_tokens":27},"arboris":{"hits":3126,"total":7992,"hit_pct":39},"timings":{"prefill_ms":65,"decode_ms":118}}
+
+--- Long-Form Prose Decode (max_tokens=256) ---
+{"id":"cmpl-q36","object":"chat.completion","model":"qwen3.6-35b-a3b-fp8","choices":[{"index":0,"message":{"role":"assistant","content":"# The Unified Horizon: Architectural Synergy in Modern Superchips\n\nThe evolution of computing architecture has reached a pivotal inflection point with the advent of \"superchips\"—System-on-Chip (SoC) designs that integrate heterogeneous processing units, such as Central Processing Unit (CPU) cores and Graphics Processing Unit (GPU) Streaming Multiprocessors (SMs), onto a single silicon die. This integration is not merely a matter of physical proximity; it is a fundamental rethinking of data movement, governed by **Unified Memory Architecture (UMA)** and **coherent interconnects**. This essay explores how these technologies couple CPU and GPU resources, addressing three critical performance dimensions: memory bandwidth ceilings, L2 cache locality, and the latency implications for autoregressive prose decoding.\n\n## 1. The Foundation: Coherent Unified Memory Interconnects\n\nIn traditional computing architectures, CPUs and GPUs operated with separate memory spaces. Data transfer required explicit copying via the PCIe bus, introducing significant latency and bandwidth bottlenecks. Superchips eliminate this fragmentation through **coherent unified memory**.\n\n### 1.1 Hardware Coherence Protocols\nCoherence ensures that multiple caches (L1, L2, L3) across different processing units see a consistent view of memory"},"finish_reason":"stop"}],"usage":{"prompt_tokens":58,"completion_tokens":256,"total_tokens":314},"arboris":{"hits":44558,"total":105640,"hit_pct":42},"timings":{"prefill_ms":94,"decode_ms":3794}}
+
+--- 1600-tok Needle-in-a-Haystack Recall ---
+{"id":"cmpl-q36","object":"chat.completion","model":"qwen3.6-35b-a3b-fp8","choices":[{"index":0,"message":{"role":"assistant","content":"Captain Elena Vance authorized deployment code Aurora-742 at station Omega-9."},"finish_reason":"stop"}],"usage":{"prompt_tokens":2994,"completion_tokens":17,"total_tokens":3011},"arboris":{"hits":341266,"total":1045072,"hit_pct":32},"timings":{"prefill_ms":1703,"decode_ms":355}}
+
+--- /health after HTTP runs ---
+{"status":"ok","model":"qwen3.6-35b-a3b-fp8","engine":"omega-zero-cuda","context_window":131072,"precision":"w4","arboris_enabled":true,"arboris_hits":341266,"arboris_total":1045072,"arboris_hit_pct":32}
+
+=== 128K CONTEXT BOUNDARY + SELF-TEST + BATCH (q36-serve --self-test --batch) ===
+=== QWEN 3.6 35B-A3B 100% PURE SEEDED-OMEGA ZERO-CUDA SERVER + LIVE ARBORIS (q36-serve) ===
+Mode: Full-W4 (67.76 tok/s class, ~19.5 GB VRAM) + Live Arboris
+Loaded Qwen 3.6 ByteLevel BPE tokenizer (248,044 vocab)
+Loading real checkpoint (~34.7 GB: outside + 40 layers) into GB10 UVM...
+Loaded all 40 real layers + quantized W4 lm_head in ms=13785
+Running live real-weight q36-serve + Arboris self-test...
+Prompt 0: The capital of France is **Paris**.
+Prompt 1: 2 + 2 equals **4**.
+Live Arboris: hits=6872 / tot=16720 hit_pct=41
+
+=== CONTINUOUS MULTI-USER BATCHED DECODE BENCH (N=8)
+BATCH_DECODE: streams=8 total_toks=128 step_us=33147 agg_tok_s_x100=24134
+PASS: q36-serve real-weight 35B + live Arboris self-test
+=== DONE ===
